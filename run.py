@@ -2,38 +2,33 @@ import re
 
 from instruction_parser import InstructionParser
 from robot import Robot
+from tracker import Tracker
 
 
 class Main:
-    START_COOR_REGEX = re.compile(r'^\d\d[NSEW]$')
-
-    def __init__(self):
-        self.parser = InstructionParser()
-
-    def run(self, path):
+    def run(self, parser, path):
         f = open(path)
-        bounds = self.parser.bounds(f.readline())
-        results = []
+        bounds = parser.bounds(f.readline())
+        tracker = Tracker(bounds)
 
         for raw_line in f:
-            line = self.parser.remove_whitespace(raw_line)
+            line = parser.remove_whitespace(raw_line)
 
-            if self.START_COOR_REGEX.match(line):
-                start_coord = self.parser.start_coord(line)
-                instructions = self.parser.remove_whitespace(f.readline())
-
-                robot = Robot(start_coord, bounds)
-                result = robot.run(instructions)
-
-                results.append(result)
+            if parser.is_valid_start_position(line):
+                start_position = parser.start_position(line)
+                instructions = parser.instructions(f.readline())
+                robot = Robot(position=start_position, ping=tracker.beacon(),
+                              scents=tracker.scents())
+                robot.run(instructions)
 
         f.close()
 
-        return results
+        return tracker.results()
 
 
 if __name__ == "__main__":
     import sys
     main = Main()
-    output = main.run(sys.argv[1])
+    parser = InstructionParser()
+    output = main.run(parser, sys.argv[1])
     print(output)

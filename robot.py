@@ -1,7 +1,3 @@
-class InvalidInstruction(Exception):
-    pass
-
-
 class Robot:
     ORIENTATION_MASKS = {
         'N': (0, 1),
@@ -12,9 +8,11 @@ class Robot:
 
     ORIENTATION_ORDER = 'NESW'
 
-    def __init__(self, position, bounds):
+    def __init__(self, position, ping, scents):
         self.position = position
-        self.bounds = bounds
+        self.scents = scents
+        self.ping = ping
+
         self.commands = {
             'F': self.forward,
             'L': self.turn_left,
@@ -23,17 +21,18 @@ class Robot:
 
     def run(self, instructions):
         for instruction in instructions:
-            if self.commands[instruction]:
-                self.position = self.commands[instruction]()
-            else:
-                raise Exception
+            self.position = self.commands[instruction]()
 
-        return self.position
+            if not self.ping(self.position):
+                break
 
     def forward(self):
         x, y, orientation = self.position
         mask = self.ORIENTATION_MASKS[orientation]
-        return tuple(a + b for a, b in zip((x, y), mask)) + (orientation,)
+        new_position = tuple(
+            a + b for a, b in zip((x, y), mask)) + (orientation,)
+
+        return self.position if self.position in self.scents else new_position
 
     def turn(self, direction):
         x, y, orientation = self.position

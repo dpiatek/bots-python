@@ -1,5 +1,5 @@
 import unittest
-from instruction_parser import InstructionParser, MapSizeError, InstructionError
+from instruction_parser import InstructionParser, MapSizeError
 
 
 class InstructionParserTest(unittest.TestCase):
